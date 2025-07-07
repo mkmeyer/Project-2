@@ -1,0 +1,44 @@
+"","id","firstname","lastname","birth.date","birth.country","nba.start","nba.pro","height.feets","height.inches","height.meters","weight.pounds","weight.kilograms","college","affiliation","leagues.standard.jersey","leagues.standard.active","leagues.standard.pos","leagues.africa.jersey","leagues.africa.active","leagues.africa.pos","leagues.vegas.jersey","leagues.vegas.active","leagues.vegas.pos","leagues.utah.jersey","leagues.utah.active","leagues.utah.pos","leagues.sacramento.jersey","leagues.sacramento.active","leagues.sacramento.pos"
+"1", 553,"Lou","Williams",1986-10-27,USA,2005,  16,6,2,1.88,175,79.4,"South Gwinnett HS (GA)","South Gwinnett HS (GA)/USA", 6,TRUE,G,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"2", 402,"Jahlil","Okafor",NA,NA,   0,   0,NA,NA,NA,NA,NA,NA,NA,14,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"3", 564,"Delon","Wright",1992-04-26,USA,2015,   6,6,5,1.96,185,83.9,"Utah","Utah/USA",55,TRUE,G,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"4", 588,"Cat","Barber",1994-07-25,USA,2021,   0,NA,NA,NA,NA,NA,"North Carolina State","North Carolina State/USA", 5,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"5", 329,"Timothe","Luwawu-Cabarrot",1995-05-09,France,2016,   5,6,7,2.01,215,97.5,"Mega Basket","Mega Basket/France", 7,TRUE,G-F,NA,TRUE,G-F,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"6", 761,"John","Collins",1997-09-23,USA,2017,   4,6,9,2.06,226,102.5,"Wake Forest","Wake Forest/USA",20,TRUE,F-C,20,TRUE,F-C,20,TRUE,F-C,20,TRUE,F-C,NA,NA,NA
+"7", 738,"Jordan","Bell",1995-01-07,USA,2017,   4,6,7,2.01,216,98.0,"Oregon","Oregon/USA",20,TRUE,F,NA,NA,NA,24,TRUE,F,NA,NA,NA, 2,TRUE,F
+"8", 802,"Wes","Iwundu",1994-12-20,USA,2017,   0,NA,NA,NA,NA,NA,"Kansas State","Kansas State/USA", 4,TRUE,F,NA,NA,NA,25,TRUE,F,NA,NA,NA,NA,NA,NA
+"9",1011,"Cameron","Oliver",1996-07-11,USA,2020,   1,6,8,2.03,239,108.4,"Nevada","Nevada/USA",21,TRUE,F,NA,NA,NA,27,TRUE,F,NA,NA,NA,27,TRUE,F
+"10", 980,"Kevin","Huerter",1998-08-27,USA,2018,   3,6,7,2.01,198,89.8,"Maryland","Maryland/USA", 9,TRUE,G-F,NA,NA,NA, 1,TRUE,G, 1,TRUE,G,NA,NA,NA
+"11", 987,"Kevin","Knox II",1999-08-11,USA,2018,   3,6,7,2.01,215,97.5,"Kentucky","Kentucky/USA", 5,TRUE,F,NA,NA,NA,20,TRUE,F,NA,NA,NA,NA,NA,NA
+"12",1046,"Trae","Young",1998-09-19,USA,2018,   3,6,1,1.85,164,74.4,"Oklahoma","Oklahoma/USA",11,TRUE,G,NA,NA,NA,11,TRUE,G,11,TRUE,G,NA,NA,NA
+"13", 977,"Johnny","Hamilton",NA,NA,   0,   0,NA,NA,NA,NA,NA,NA,NA,24,FALSE,NA,NA,NA,NA,49,TRUE,C,NA,NA,NA,NA,NA,NA
+"14", 923,"DeVaughn","Akoon-Purcell",NA,NA,   0,   0,NA,NA,NA,NA,NA,NA,NA,44,FALSE,NA,NA,NA,NA,42,TRUE,F,NA,NA,NA,NA,NA,NA
+"15",2211,"Justin","Tillman",NA,NA,   0,   0,NA,NA,NA,NA,NA,NA,NA,NA,TRUE,F,NA,NA,NA,64,TRUE,F,NA,NA,NA,NA,NA,NA
+"16",2165,"Chris","Clemons",NA,NA,   0,   0,NA,NA,NA,NA,NA,NA,NA,39,FALSE,NA,NA,NA,NA,39,TRUE,G,NA,NA,NA,NA,NA,NA
+"17",2579,"Javin","DeLaurier",1998-04-07,USA,   0,   0,6,10,2.08,234,106.1,"Duke","Duke/USA",12,TRUE,C,NA,NA,NA,40,TRUE,F-C,NA,NA,NA,NA,NA,NA
+"18",1948,"DaQuan","Jeffries",1997-08-30,USA,2019,   3,6,5,1.96,225,102.1,"Tulsa","Tulsa/USA", 8,TRUE,G-F,NA,NA,NA,16,TRUE,F,55,TRUE,G-F,NA,NA,NA
+"19",1889,"Cam","Reddish",1999-09-01,USA,2019,   2,6,8,2.03,217,98.4,"Duke","Duke/USA",NA,TRUE,F-G,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"20",1868,"De'Andre","Hunter",1997-12-02,USA,2019,   2,6,8,2.03,221,100.2,"Virginia","Virginia/USA",12,TRUE,F-G,NA,NA,NA,12,TRUE,F,NA,NA,NA,NA,NA,NA
+"21",1892,"Admiral","Schofield",1997-03-30,United Kingdom,2019,   1,6,5,1.96,241,109.3,"Tennessee","Tennessee/United Kingdom",25,TRUE,F,NA,NA,NA,25,TRUE,F,NA,NA,NA,NA,NA,NA
+"22",2388,"Jeremiah","Martin",1996-06-19,USA,2019,   2,6,2,1.88,185,83.9,"Memphis","Memphis/USA", 3,TRUE,G,NA,NA,NA,10,TRUE,G,NA,NA,NA,NA,NA,NA
+"23",2629,"Onyeka","Okongwu",2000-12-11,USA,2020,   1,6,8,2.03,240,108.9,"Southern California","Southern California/USA",17,TRUE,F-C,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"24",2620,"Skylar","Mays",1997-09-05,USA,2020,   1,6,4,1.93,205,93.0,"Louisiana State","Louisiana State/USA", 4,TRUE,G,NA,NA,NA, 4,TRUE,G,NA,NA,NA,NA,NA,NA
+"25",2979,"Nahziah","Carter",1999-08-24,USA,   0,   0,6,6,1.98,205,93.0,"Washington","Washington/USA",NA,NA,NA,NA,NA,NA,31,TRUE,G,NA,NA,NA,NA,NA,NA
+"26",2800,"Sharife","Cooper",2001-06-11,USA,2021,   0,6,1,1.85,176,79.8,"Auburn","Auburn/USA", 2,TRUE,G,NA,NA,NA, 2,TRUE,G,NA,NA,NA,NA,NA,NA
+"27",2819,"Jalen","Johnson",2001-12-18,USA,2021,   0,6,8,2.03,219,99.3,"Duke","Duke/USA", 1,TRUE,F,NA,NA,NA, 1,TRUE,F,NA,NA,NA,NA,NA,NA
+"28",2794,"Chaundee","Brown Jr.",1998-12-04,USA,2021,   0,6,5,1.96,215,97.5,"Michigan","Michigan/USA",38,TRUE,F,NA,NA,NA,45,TRUE,G,NA,NA,NA,15,TRUE,G
+"29",2890,"A.J.","Lawson",2000-07-15,Canada,   0,   0,6,6,1.98,180,81.6,"South Carolina","South Carolina/Canada", 5,TRUE,G,NA,NA,NA,29,TRUE,G,NA,NA,NA,58,TRUE,G
+"30",3395,"Malik","Ellison",NA,NA,   0,   0,NA,NA,NA,NA,NA,NA,NA,NA,TRUE,G,NA,NA,NA,28,TRUE,G,28,TRUE,G,NA,NA,NA
+"31",3380,"Malcolm","Hill",1995-10-26,USA,2021,   0,6,6,1.98,220,99.8,"Illinois","Illinois/USA",14,TRUE,F,NA,NA,NA,21,TRUE,G-F,NA,NA,NA,NA,NA,NA
+"32",3382,"Ibi","Watson-Boye",NA,NA,   0,   0,NA,NA,NA,NA,NA,NA,NA,16,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"33", 181,"Danilo","Gallinari",1988-08-08,Italy,2008,  12,6,10,2.08,236,107.0,"Olimpia Milano","Olimpia Milano/Italy", 8,TRUE,F, 8,TRUE,F,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"34", 497,"Lance","Stephenson",1990-09-05,USA,2010,   9,6,5,1.96,210,95.3,"Cincinnati","Cincinnati/USA", 6,TRUE,F,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"35", 141,"Gorgui","Dieng",1990-01-18,Senegal,2013,   8,6,10,2.08,248,112.5,"Louisville","Louisville/Senegal",10,TRUE,C,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"36", 239,"Solomon","Hill",1991-03-18,USA,2013,   0,NA,NA,NA,NA,NA,"Arizona","Arizona/USA",99,FALSE,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"37", 372,"Eric","Moreland",NA,NA,   0,   0,NA,NA,NA,NA,NA,NA,NA,25,FALSE,NA,NA,NA,NA,25,TRUE,F,NA,NA,NA,NA,NA,NA
+"38",  92,"Clint","Capela",1994-05-18,Switzerland,2014,   7,6,10,2.08,256,116.1,"Elan Chalon","Elan Chalon/Switzerland",15,TRUE,C,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"39", 743,"Bogdan","Bogdanovic",1992-08-18,Serbia,2017,   4,6,6,1.98,225,102.1,"Fenerbahce","Fenerbahce/Serbia",13,TRUE,G,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"40",3006,"Juwan","Durham",1997-12-22,NA,   0,   0,6,11,2.11,231,104.8,"Notre Dame",NA,NA,NA,NA,NA,NA,NA,30,TRUE,F,NA,NA,NA,NA,NA,NA
+"41",3057,"Max","Heidegger",1997-06-05,USA,   0,   0,6,3,1.9,180,81.6,"California-Santa Barbara","California-Santa Barbara/USA",NA,NA,NA,NA,NA,NA,26,TRUE,G,NA,NA,NA,NA,NA,NA
+"42",3072,"Justin","Jaworski",1999-06-21,NA,   0,   0,6,3,1.9,196,88.9,"Lafayette",NA,NA,NA,NA,NA,NA,NA,33,TRUE,G,NA,NA,NA,NA,NA,NA
+"43",3263,"Ibi","Watson",1998-01-06,NA,   0,   0,6,5,1.96,200,90.7,"Dayton",NA,NA,NA,NA,NA,NA,NA,16,TRUE,G,NA,NA,NA,NA,NA,NA
