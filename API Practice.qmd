@@ -12,6 +12,8 @@ library("tidyverse")
 library("jsonlite")
 library("httr")
 library("ggplot2")
+library("lubridate")
+library("anytime")
 
 msleep <- ggplot2::msleep
 ```
@@ -131,6 +133,36 @@ player_stat_data <- as_tibble(parsed_nba_info$response) #pulling response
 player_stat_data
 
 #write.csv(player_stat_data, "player_stat_data.csv")
+```
+
+```{r}
+players_stats_query <- function(season, player){
+  url <- paste0("https://api-nba-v1.p.rapidapi.com/players/statistics?", #base of URL
+                "&season=", season, #adding season to URL
+                "&id=", player #adding team to URL
+                )
+  
+  response <- httr::GET(url, add_headers('x-rapidapi-key' = '9086777ffcmsh8e20ab7c07d978ep14073cjsndbf0615eb5ec', 
+                                         'x-rapidapi-host' = 'api-nba-v1.p.rapidapi.com'), 
+                        content_type("application/octet-stream"))
+  
+  parsed_nba_info <- fromJSON(rawToChar(response$content))
+  players_stats_data <- as_tibble(parsed_nba_info$response) #pulling response
+  return(players_stats_data)
+}
+
+players_stats_data <- players_stats_query(2020, 236)
+
+players_stats_data$team_code <- players_stats_data$team$code
+
+players_stats_data$first_name <- players_stats_data$player$firstname
+
+players_stats_data$last_name <- players_stats_data$player$lastname
+
+players_stats_data$min1 <- strptime(players_stats_data$min, format = "%M:%S")
+
+players_stats_data$minutes1 <- round_date(players_stats_data$min1, unit = "1 minute")
+players_stats_data$minutes <- minute(players_stats_data$minutes1)
 ```
 
 ```{r}

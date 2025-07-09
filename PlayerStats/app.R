@@ -17,19 +17,18 @@ library("bslib")
 ui <- fluidPage(
   
   # Application title
-  titlePanel("NBA Players Data"),
+  titlePanel("NBA Player Statistics Data"),
   
   # Sidebar with options for the data set
   sidebarLayout(
     sidebarPanel(
       h3("Select the position:"),
-      selectizeInput("leagues_standard_pos", "leagues_standard_pos", selected = "G", choices = levels(as.factor(players_data$leagues_standard_pos))),
+      selectizeInput("pos", "Position", selected = "SG", choices = levels(as.factor(players_stats_data$pos))),
       
       br(),
       
-      sliderInput("size", "Size of Points on Graph",
-                  min = 1, max = 10, value = 5, step = 1),
-      checkboxInput("birth_country", h4("birth_country", style = "color:red;"))
+      h3("Select the team:"),
+      selectizeInput("team_code", "Team", selected = "SAC", choices = levels(as.factor(players_stats_data$team_code)))
     ),
     
     # Show outputs?msle
@@ -45,34 +44,30 @@ server <- function(input, output, session) {
   
   #get data for only order specified
   getData <- reactive({
-    positions <- input$leagues_standard_pos
+    positions <- input$pos
+    teams <- input$team_code
     
-    newData <- players_data %>% filter(leagues_standard_pos == positions)
+    newData <- players_stats_data %>% filter(pos == positions & team_code == teams)
     newData
   })
   
   #create plot
   output$playersPlot <- renderPlot({
     #get data
-    playersData <- getData()
+    playerstatsData <- getData()
     
     #base plotting object
-    g <- ggplot(playersData, aes(x = height_meters, y = weight_pounds))
-    
-    if (input$birth_country) {
-      g + geom_point(size = input$size, aes(col = birth_country))
-    } else {
-      g + geom_point(size = input$size)
-    }
+    g <- ggplot(playerstatsData, aes(x = points)) 
+    g + geom_histogram()
   })
   
   #create text info
   output$info <- renderText({
     #get data
-    playersData <- getData()
+    playerstatsData <- getData()
     
     #paste info out
-    paste("The average body weight for leagues$standard$pos", input$leagues_standard_pos, "is", round(mean(playersData$height_meters, na.rm = TRUE), 2), "and the average total sleep time is", round(mean(playersData$weight_pounds, na.rm = TRUE), 2), sep = " ")
+    paste("The average minutes played for", playerstatsData$first_name[1], playerstatsData$last_name[1], "is", round(mean(playerstatsData$minutes, na.rm = TRUE), 2), "and the average points scored is", round(mean(playerstatsData$points, na.rm = TRUE), 2), sep = " ")
     
   })
   
