@@ -11,42 +11,9 @@ rm(list=ls())
 library("tidyverse")
 library("jsonlite")
 library("httr")
-```
+library("ggplot2")
 
-
-```{r}
-#Reading in saved data 
-#nba_data <- read.csv("nba_data.csv")
-```
-
-
-### Question 1: Using `GET` from the `httr` Package to Pull News Info
-
-```{r, warning=FALSE, message=FALSE}
-#Loading required packages
-library("httr")
-
-#Using httr::GET to collect information about the nba in the news
-nba_info <- httr::GET("https://v2.nba.api-sports.io/everything?x-rapidapi-key=9086777ffcmsh8e20ab7c07d978ep14073cjsndbf0615eb5ec")
-nba_info
-```
-
-```{r}
-url <- "https://api-nba-v1.p.rapidapi.com/players/statistics"
-# game = "8133"
-queryString <- list(game = "8133")
-
-response <- VERB("GET", url, query = queryString, add_headers('x-rapidapi-key' = '9086777ffcmsh8e20ab7c07d978ep14073cjsndbf0615eb5ec', 'x-rapidapi-host' = 'api-nba-v1.p.rapidapi.com'), content_type("application/octet-stream"))
-
-response <- httr::GET(url, 
-                      add_headers('x-rapidapi-key' = '9086777ffcmsh8e20ab7c07d978ep14073cjsndbf0615eb5ec', 
-                                  'x-rapidapi-host' = 'api-nba-v1.p.rapidapi.com'),
-                      content_type("application/octet-stream"))
-
-content(response, "text")
-
-# use this link to see R code for API queries: https://rapidapi.com/api-sports/api/api-nba
-# could also try accessing data from Basketball Reference? mentioned in CSAS powerpoint
+msleep <- ggplot2::msleep
 ```
 
 ```{r}
@@ -60,11 +27,7 @@ queryString <- list(
 )
 
 response <- VERB("GET", url, query = queryString, add_headers('x-rapidapi-key' = '9086777ffcmsh8e20ab7c07d978ep14073cjsndbf0615eb5ec', 'x-rapidapi-host' = 'api-nba-v1.p.rapidapi.com'), content_type("application/octet-stream"))
-```
 
-
-```{r}
-#Parsing the news information about the nba
 parsed_nba_info <- fromJSON(rawToChar(response$content))
 standings_data <- as_tibble(parsed_nba_info$response) #pulling response
 standings_data
@@ -72,6 +35,38 @@ standings_data
 #write.csv(standings_data, "standings_data.csv")
 ```
 
+```{r}
+season <- "2021"
+team <- "1"
+key <- "9086777ffcmsh8e20ab7c07d978ep14073cjsndbf0615eb5ec"
+
+url <- paste0("https://api-nba-v1.p.rapidapi.com/standings?league=standard", #base of URL
+               "&season=", season, #adding season to URL
+               "&team=", team #adding team to URL
+              )
+
+pacers_info <- httr::GET(url, add_headers('x-rapidapi-key' = '9086777ffcmsh8e20ab7c07d978ep14073cjsndbf0615eb5ec', 'x-rapidapi-host' = 'api-nba-v1.p.rapidapi.com'), content_type("application/octet-stream"))
+pacers_info
+```
+
+```{r}
+standings_query <- function(season, team){
+  url <- paste0("https://api-nba-v1.p.rapidapi.com/standings?league=standard", #base of URL
+                "&season=", season, #adding season to URL
+                "&team=", team #adding team to URL
+                )
+  
+  response <- httr::GET(url, add_headers('x-rapidapi-key' = '9086777ffcmsh8e20ab7c07d978ep14073cjsndbf0615eb5ec', 
+                                         'x-rapidapi-host' = 'api-nba-v1.p.rapidapi.com'), 
+                        content_type("application/octet-stream"))
+  
+  parsed_nba_info <- fromJSON(rawToChar(response$content))
+  standings_data <- as_tibble(parsed_nba_info$response) #pulling response
+  return(standings_data)
+}
+
+standings_data <- standings_query(2020, 5)
+```
 
 ```{r}
 #Players per team and season
@@ -83,16 +78,41 @@ queryString <- list(
 )
 
 response <- VERB("GET", url, query = queryString, add_headers('x-rapidapi-key' = '9086777ffcmsh8e20ab7c07d978ep14073cjsndbf0615eb5ec', 'x-rapidapi-host' = 'api-nba-v1.p.rapidapi.com'), content_type("application/octet-stream"))
-```
 
-
-```{r}
-#Parsing the news information about the nba
 parsed_nba_info <- fromJSON(rawToChar(response$content))
 players_data <- as_tibble(parsed_nba_info$response) #pulling response
 players_data
 
 #write.csv(players_data, "players_data.csv")
+```
+
+```{r}
+players_query <- function(season, team){
+  url <- paste0("https://api-nba-v1.p.rapidapi.com/players?", #base of URL
+                "&season=", season, #adding season to URL
+                "&team=", team #adding team to URL
+                )
+  
+  response <- httr::GET(url, add_headers('x-rapidapi-key' = '9086777ffcmsh8e20ab7c07d978ep14073cjsndbf0615eb5ec', 
+                                         'x-rapidapi-host' = 'api-nba-v1.p.rapidapi.com'), 
+                        content_type("application/octet-stream"))
+  
+  parsed_nba_info <- fromJSON(rawToChar(response$content))
+  players_data <- as_tibble(parsed_nba_info$response) #pulling response
+  return(players_data)
+}
+
+players_data1 <- players_query(2020, 5)
+
+players_data <- players_data1[(!is.na(players_data1$height$meters)), ]
+
+players_data$height_meters <- as.numeric(players_data$height$meters)
+
+players_data$weight_pounds <- as.numeric(players_data$weight$pounds)
+
+players_data$leagues_standard_pos <- players_data$leagues$standard$pos
+
+players_data$birth_country <- players_data$birth$country
 ```
 
 ```{r}
@@ -105,10 +125,7 @@ queryString <- list(
 )
 
 response <- VERB("GET", url, query = queryString, add_headers('x-rapidapi-key' = '9086777ffcmsh8e20ab7c07d978ep14073cjsndbf0615eb5ec', 'x-rapidapi-host' = 'api-nba-v1.p.rapidapi.com'), content_type("application/octet-stream"))
-```
 
-```{r}
-#Parsing the news information about the nba
 parsed_nba_info <- fromJSON(rawToChar(response$content))
 player_stat_data <- as_tibble(parsed_nba_info$response) #pulling response
 player_stat_data
@@ -126,17 +143,13 @@ queryString <- list(
 )
 
 response <- VERB("GET", url, query = queryString, add_headers('x-rapidapi-key' = '9086777ffcmsh8e20ab7c07d978ep14073cjsndbf0615eb5ec', 'x-rapidapi-host' = 'api-nba-v1.p.rapidapi.com'), content_type("application/octet-stream"))
-```
 
-```{r}
-#Parsing the news information about the nba
 parsed_nba_info <- fromJSON(rawToChar(response$content))
 team_data <- as_tibble(parsed_nba_info$response) #pulling response
 team_data
 
 #write.csv(team_data, "team_data.csv")
 ```
-
 
 ### Question 3: Writing a Function to Query the API
 
@@ -153,7 +166,6 @@ api_query <- function(subject, time, key){
 }
 ```
 
-
 PLANNING
 
 About tab
@@ -162,11 +174,63 @@ Data Download tab
 
 Data Exploration tab
 
-one tab that displays overall team statistics by year 
-- requires team and season input (categorical variables)
-- displays: table of overall win/loss record, table of players that scored the most points, table of positions that scored the most points, image of the logo of the team
+-   one tab that displays overall team statistics by year
 
-one tab that shows players over time
-- requires player input
-- graph of scoring over time with linear projection for the future (?)
-- graph of where on the basketball court they like to shoot
+    -   requires team and season input (categorical variables) -
+
+    -   displays:
+
+        -   table of overall win/loss record, (standings_data)
+
+            -   pie chart
+
+        -   table of players that scored the most points, (team_data but needs cleaning)
+
+            -   bar plot
+
+        -   table of positions that scored the most points, (team_data but needs cleaning)
+
+            -   scatterplot of points by position
+
+            -   scatterplot of rebounds by position
+
+        -   image of the logo of the team (standings_data)
+
+-   one tab that shows players by year
+
+    -   requires player and season input
+
+    -   displays:
+
+        -   comparing their scoring by position (player_stat_data)
+
+        -   displaying points, assists, and rebounds (player_stat_data)
+
+```{r}
+  
+  #create plot
+  output$playersPlot <- renderPlot({
+    #get data
+    playersData <- getData()
+    
+    #base plotting object
+    g <- ggplot(playersData, aes(x = height$meters, y = weight$pounds))
+    
+    if (input$birth$country) {
+      g + geom_point(size = input$size, aes(col = birth$country))
+    } else {
+      g + geom_point(size = input$size)
+    }
+  })
+  
+  #create text info
+  output$info <- renderText({
+    #get data
+    playersData <- getData()
+    
+    #paste info out
+    paste("The average body weight for leagues$standard$pos", input$leagues$standard$pos, "is", round(mean(playersData$height$meters, na.rm = TRUE), 2), "and the average total sleep time is", round(mean(playersData$weight$pounds, na.rm = TRUE), 2), sep = " ")
+    
+  })
+  
+```
