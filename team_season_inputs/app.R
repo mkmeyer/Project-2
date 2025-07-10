@@ -45,6 +45,7 @@ players_query <- function(season, team){
                         content_type("application/octet-stream"))
   
   parsed_nba_info <- fromJSON(rawToChar(response$content))
+  
   players_data1 <- as_tibble(parsed_nba_info$response) #pulling response
   
   players_data <- players_data1[(!is.na(players_data1$height$meters)), ]
@@ -52,6 +53,7 @@ players_query <- function(season, team){
   players_data$weight_pounds <- as.numeric(players_data$weight$pounds)
   players_data$leagues_standard_pos <- players_data$leagues$standard$pos
   players_data$birth_country <- players_data$birth$country
+  
   return(players_data)
 }
 
@@ -93,39 +95,12 @@ team_stats_query <- function(season, team){
   
   team_data$likely_starter <- ifelse(team_data$games_start_pct > 0.5, 1, 0)
   
-  return(team_data1)
-}
-
-#Data cleaning function
-cleaning <- function(team_data1) {
-  team_data1$first_name <- team_data1$player$firstname
-  team_data1$last_name <- team_data1$player$lastname
-  team_data1$min1 <- strptime(team_data1$min, format = "%M:%S")
-  team_data1$minutes1 <- round_date(team_data1$min1, unit = "1 minute")
-  team_data1$minutes <- minute(team_data1$minutes1)
-  team_data1$starter <- ifelse(is.na(team_data1$pos), NA, 1)
-  
-  team_data <- team_data1 %>%
-    group_by(first_name, last_name) %>%
-    mutate(games_not_played = sum(minutes < 1 | is.na(minutes))) %>%
-    mutate(games = n()) %>%
-    mutate(games_played = n() - games_not_played) %>%
-    mutate(games_started = sum(starter, na.rm = TRUE)) %>%
-    mutate(games_start_pct = games_started/games_played) %>%
-    mutate(overall_ppg = sum(points, na.rm = TRUE)/games_played) %>%
-    mutate(overall_rpg = sum(totReb, na.rm = TRUE)/games_played) %>%
-    mutate(overall_mpg = sum(minutes, na.rm = TRUE)/games_played) %>%
-    fill(starter, .direction = "downup") %>%
-    select(first_name, last_name, overall_ppg, overall_rpg, overall_mpg, games, games_played, games_not_played, games_started, games_start_pct, starter) %>%
-    distinct()
-  
-  team_data$likely_starter <- ifelse(team_data$games_start_pct > 0.5, 1, 0)
   return(team_data)
 }
 
-#Creating a list of options of seasons
+#Creating a list of options of seasons and positions
 seasons <- c(2015:2024)
-
+positions <- c("G", "SF", "SG", "PF", "C", "F-C")
 
 #Creating list of options of NBA teams
 url <- "https://api-nba-v1.p.rapidapi.com/teams"
@@ -135,6 +110,10 @@ teams <- fromJSON(rawToChar(response$content))
 team_data <- as_tibble(teams$response) #pulling response
 nba_teams <- team_data[(team_data$nbaFranchise == TRUE), ]
 nba_teams_list <- paste(nba_teams$id, nba_teams$name, sep = " ")
+
+
+
+
 
 ui <- fluidPage(
   
@@ -150,6 +129,9 @@ ui <- fluidPage(
       h3("Select the team:"),
       selectizeInput("teams", "Team", selected = "1 Atlanta Hawks", choices = levels(as.factor(nba_teams_list))),
       
+      h3("Select the position:"),
+      selectizeInput("positions", "Position", selected = "G", choices = levels(as.factor(positions))),
+      
       sliderInput("size", "Size of Points on Graph",
                   min = 1, max = 10, value = 5, step = 1),
       
@@ -160,8 +142,8 @@ ui <- fluidPage(
     mainPanel(
       plotOutput("teamPlot1"),
       plotOutput("teamPlot2"),
-      textOutput("info"),
-      tableOutput("table")
+      plotOutput("playersPlot"),
+      textOutput("info")
     )
   )
 )
@@ -169,41 +151,74 @@ ui <- fluidPage(
 server <- function(input, output, session) {
   
   #get data for only order specified
-  getData <- reactive({
+  getteamData <- reactive({
     season <- input$seasons
     team <- as.numeric(gsub("([0-9]+).*$", "\\1", input$teams))
-    
-    newData <- cleaning(team_stats_query(season, team))
-    newData
+
+    newteamData <- team_stats_query(season, team) 
+    newteamData
+  })
+  
+  getplayersData <- reactive({
+    season <- input$seasons
+    team <- as.numeric(gsub("([0-9]+).*$", "\\1", input$teams))
+    positions <- input$positions
+
+    newplayersData <- players_query(season, team) %>% filter(leagues_standard_pos == positions)
+    newplayersData
+  })
+  
+  # #create plot
+  output$teamPlot1 <- renderPlot({
+    #get data
+    teamData <- getteamData()
+
+    #base plotting object
+    g <- ggplot(teamData, aes(x = overall_mpg, y = overall_ppg, label = last_name)) + geom_text(hjust = 0, nudge_x = 0.20)
+
+    if (input$games_start_pct) {
+      g + geom_point(size = input$size, aes(col = games_start_pct))
+    } else {
+      g + geom_point(size = input$size)
+    }
+  })
+
+  output$teamPlot2 <- renderPlot({
+    #get data
+    teamData <- getteamData()
+
+    #base plotting object
+    g <- ggplot(teamData, aes(x = overall_mpg, y = overall_rpg, label = last_name)) + geom_text(hjust = 0, nudge_x = 0.20)
+
+    if (input$games_start_pct) {
+      g + geom_point(size = input$size, aes(col = games_start_pct))
+    } else {
+      g + geom_point(size = input$size)
+    }
   })
   
   #create plot
-  output$teamPlot1 <- renderPlot({
+  output$playersPlot <- renderPlot({
     #get data
-    teamData <- getData()
-    
+    playersData <- getplayersData()
+
     #base plotting object
-    g <- ggplot(teamData, aes(x = overall_mpg, y = overall_ppg, label = last_name)) + geom_text(hjust = 0, nudge_x = 0.20)
-    
-    if (input$games_start_pct) {
-      g + geom_point(size = input$size, aes(col = games_start_pct))
-    } else {
-      g + geom_point(size = input$size)
-    }
-  })
+    output$playersPlot <- renderPlot({
+      #get data
+      playersData <- getplayersData()
+      
+      #base plotting object
+      g <- ggplot(playersData, aes(x = weight_pounds, y = height_meters, label = lastname)) + geom_text(hjust = 0, nudge_x = 0.20)
+    })
+
   
-  output$teamPlot2 <- renderPlot({
+  #create text info
+  output$info <- renderText({
     #get data
-    teamData <- getData()
-    
-    #base plotting object
-    g <- ggplot(teamData, aes(x = overall_mpg, y = overall_rpg, label = last_name)) + geom_text(hjust = 0, nudge_x = 0.20)
-    
-    if (input$games_start_pct) {
-      g + geom_point(size = input$size, aes(col = games_start_pct))
-    } else {
-      g + geom_point(size = input$size)
-    }
+    playersData <- getplayersData()
+
+    #paste info out
+    paste("The average body height for the", input$positions, "position is", round(mean(playersData$height_meters, na.rm = TRUE), 2), "meters", "and the average weight is", round(mean(playersData$weight_pounds, na.rm = TRUE), 2), "pounds", sep = " ")
   })
   
 }
