@@ -6,9 +6,6 @@
 #
 #    https://shiny.posit.co/
 #
-
-rm(list=ls())
-
 library("shiny")
 library("tidyverse")
 library("jsonlite")
@@ -22,7 +19,7 @@ standings_query <- function(season, team){
   url <- paste0("https://api-nba-v1.p.rapidapi.com/standings?league=standard", #base of URL
                 "&season=", season, #adding season to URL
                 "&team=", team #adding team to URL
-  )
+                )
   
   response <- httr::GET(url, add_headers('x-rapidapi-key' = '9086777ffcmsh8e20ab7c07d978ep14073cjsndbf0615eb5ec', 
                                          'x-rapidapi-host' = 'api-nba-v1.p.rapidapi.com'), 
@@ -126,7 +123,7 @@ team_stats_query <- function(season, team){
 
 #Creating a list of options of seasons and positions
 seasons <- c(2015:2024)
-positions <- c("G", "SF", "SG", "PF", "C", "F-C")
+positions <- c("G", "SF", "SG", "PF", "C", "F", "F-C", "F-G", "G-F")
 
 #Creating list of options of NBA teams
 url <- "https://api-nba-v1.p.rapidapi.com/teams"
@@ -137,10 +134,6 @@ team_data <- as_tibble(teams$response) #pulling response
 nba_teams <- team_data[(team_data$nbaFranchise == TRUE), ]
 nba_teams_list <- paste(nba_teams$id, nba_teams$name, sep = " ")
 
-
-
-
-
 ui <- fluidPage(
   
   # Application title
@@ -150,7 +143,7 @@ ui <- fluidPage(
   sidebarLayout(
     sidebarPanel(
       h3("Select the season:"),
-      selectizeInput("seasons", "Season", selected = 2019, choices = levels(as.factor(seasons))),
+      selectizeInput("seasons", "Season", selected = 2020, choices = levels(as.factor(seasons))),
       
       h3("Select the team:"),
       selectizeInput("teams", "Team", selected = "1 Atlanta Hawks", choices = levels(as.factor(nba_teams_list))),
@@ -164,24 +157,18 @@ ui <- fluidPage(
       checkboxInput("games_start_pct", h4("Percent Games Started", style = "color:black;"))
     ),
     
-    # Show outputs?msle
-    # mainPanel(
-    #   plotOutput("teamPlot1"),
-    #   plotOutput("teamPlot2"),
-    #   plotOutput("playersPlot"),
-    #   textOutput("info")
-    # )
     navset_card_underline(
-      # Panel with plot ----
+      # About tab----
       nav_panel("About", HTML(paste0(
+        "<img style = 'display: block; margin-left: auto; margin-right: auto;' src='https://images.ctfassets.net/h8q6lxmb5akt/5qXnOINbPrHKXWa42m6NOa/421ab176b501f5bdae71290a8002545c/nba-logo_2x.png' width = '186'></a>",
         "<p>The purpose of this app is to explore NBA data. I have been a college basketball fan and WNBA basketball fan for a few years, but I have often felt overwhelmed trying to learn about the NBA. There are so many teams and so much history! My goal with this app is to describe and display information for different combinations of teams, seasons, and positions in order to visualize trends in the NBA and for specific teams and seasons.</p>",
-        "<p>This data is sourced from <a href = 'https://rapidapi.com/api-sports/api/api-nba' >Rapid API</a>. I found this using the <a href = 'https://github.com/public-apis/public-apis?tab=readme-ov-file#sports--fitness' >GitHub</a> link provided for this project. I had to make an API key for this project, but did not need to pay for a subscription. This data contains information on standings, teams, and players from roughly the years of 2014-2024. There are occasionally years of missing data from certain teams.</p>",
+        "<p>This data is sourced from <a href = 'https://rapidapi.com/api-sports/api/api-nba' >Rapid API</a>. I found this using the <a href = 'https://github.com/public-apis/public-apis?tab=readme-ov-file#sports--fitness' >GitHub</a> link provided for this project. I had to make an API key for this project, but did not need to pay for a subscription. I ended up making so many calls that I purchased one, but I was too far into the project to turn back. This likely wouldn't be an issue for a user, but was just because I was calling the API so much for trial and error. This data contains information on standings, teams, and players from roughly the years of 2014-2024. There are occasionally years of missing data from certain teams.</p>",
         "<p>The About tab contains information on the broader project. The Data Download tab displays and downloads the data tables retrieves from the API given certain user selected inputs. The Data Exploration tab contains data visualization based on several metrics. There are plots for wins and losses, points scored and rebounds by minute played, and player body dimensions by position. </p>"))),
       
-      # Panel with summary ----
+      # Data Download Tab--
       nav_panel("Data Download", tableOutput("standings"), tableOutput("team_table"), tableOutput("players_table")),
       
-      # Panel with table ----
+      # Data Exploration Tab ----
       nav_panel("Data Exploration", plotOutput("standingsPlot"), plotOutput("teamPlot1"), plotOutput("teamPlot2"), plotOutput("playersPlot"), textOutput("info"))
     )
   )
@@ -190,15 +177,16 @@ ui <- fluidPage(
 
 server <- function(input, output, session) {
   
-  #get data for only order specified
+  #Get standings data based on user inputted season and team
   getstandingsData <- reactive({
     season <- input$seasons
     team <- as.numeric(gsub("([0-9]+).*$", "\\1", input$teams))
     
-    newstandingsData <- standings_query(season, team) 
+    newstandingsData <- team_stats_query(season, team) 
     newstandingsData
   })
   
+  #Get team data based on user inputted season and team
   getteamData <- reactive({
     season <- input$seasons
     team <- as.numeric(gsub("([0-9]+).*$", "\\1", input$teams))
@@ -207,6 +195,7 @@ server <- function(input, output, session) {
     newteamData
   })
   
+  #Get player data based on user inputted season, team, and position
   getplayersData <- reactive({
     season <- input$seasons
     team <- as.numeric(gsub("([0-9]+).*$", "\\1", input$teams))
@@ -232,12 +221,12 @@ server <- function(input, output, session) {
     teamtableData
   })
   
-  # output$players_table <- renderTable({
-  #   #get data
-  #   playersData <- getplayersData()
-  #   write.csv(playersData, "playersData.csv")
-  #   head(playersData)
-  # })
+  output$players_table <- renderTable({
+    #get data
+    playerstableData <- getplayersData()
+    write.csv(playerstableData, "playersData.csv")
+    head(playerstableData)
+  })
   
   #create a standings data table table
   
