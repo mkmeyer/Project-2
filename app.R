@@ -1,11 +1,4 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    https://shiny.posit.co/
-#
+#Loading libraries required for app execution
 library("shiny")
 library("tidyverse")
 library("jsonlite")
@@ -14,21 +7,25 @@ library("ggplot2")
 library("bslib")
 
 #Creating Functions to Read in the Data
-#Team Standings Data
+#Function to read in Team Standings Data
 standings_query <- function(season, team){
-  url <- paste0("https://api-nba-v1.p.rapidapi.com/standings?league=standard", #base of URL
+  standings_url <- paste0("https://api-nba-v1.p.rapidapi.com/standings?league=standard", #base of URL
                 "&season=", season, #adding season to URL
                 "&team=", team #adding team to URL
                 )
   
-  response <- httr::GET(url, add_headers('x-rapidapi-key' = '9086777ffcmsh8e20ab7c07d978ep14073cjsndbf0615eb5ec', 
+  standings_response <- httr::GET(standings_url, add_headers('x-rapidapi-key' = '9086777ffcmsh8e20ab7c07d978ep14073cjsndbf0615eb5ec', 
                                          'x-rapidapi-host' = 'api-nba-v1.p.rapidapi.com'), 
-                        content_type("application/octet-stream"))
+                        content_type("application/octet-stream")) #supplying necessary key, host, and content type information
   
-  parsed_nba_info <- fromJSON(rawToChar(response$content))
+  parsed_standings_info <- fromJSON(rawToChar(standings_response$content)) #parsing the returned standings data
   
-  standings_data <- as_tibble(parsed_nba_info$response) #pulling response
+  standings_data <- as_tibble(parsed_standings_info$response) #pulling tibble from parsed standings data
   
+  #Recoding nested variables in order to access them
+  #I kept running into errors attempting this with "rename" from tidyverse, so I did baseR coding
+  standings_data$team_id <- standings_data$team$id
+  standings_data$team_name <- standings_data$team$name
   standings_data$conference_name <- standings_data$conference$name
   standings_data$conference_rank <- as.numeric(standings_data$conference$rank)
   standings_data$division_rank <- as.numeric(standings_data$division$rank)
@@ -36,7 +33,6 @@ standings_query <- function(season, team){
   standings_data$loss_pct <- as.numeric(standings_data$loss$percentage)
   standings_data$win_total <- as.numeric(standings_data$win$total)
   standings_data$loss_total <- as.numeric(standings_data$loss$total)
-  
   standings_data$conference_win <- as.numeric(standings_data$conference$win)
   standings_data$conference_loss <- as.numeric(standings_data$conference$loss)
   standings_data$division_win <- as.numeric(standings_data$division$win)
@@ -46,74 +42,85 @@ standings_query <- function(season, team){
   standings_data$win_away <- as.numeric(standings_data$win$away)
   standings_data$loss_away <- as.numeric(standings_data$loss$away)
   
-  standingsdata_long <- standings_data %>%
-    pivot_longer(cols = 17:26, 
+  #converting the dataset into long form for better plotting use
+  standingsdata_long <- standings_data |>
+    pivot_longer(cols = 19:28, #selecting numeric columns
                  names_to = "Metric", 
-                 values_to = "Count") %>%
-    select(c(1:3, 12:18))
+                 values_to = "Count") |>
+    select(c(1, 12:20))
   
   return(standingsdata_long)
 }
 
 #Player Statistics Data
 players_query <- function(season, team){
-  url <- paste0("https://api-nba-v1.p.rapidapi.com/players?", #base of URL
+  players_url <- paste0("https://api-nba-v1.p.rapidapi.com/players?", #base of URL
                 "&season=", season, #adding season to URL
                 "&team=", team #adding team to URL
   )
   
-  response <- httr::GET(url, add_headers('x-rapidapi-key' = '9086777ffcmsh8e20ab7c07d978ep14073cjsndbf0615eb5ec', 
+  players_response <- httr::GET(players_url, add_headers('x-rapidapi-key' = '9086777ffcmsh8e20ab7c07d978ep14073cjsndbf0615eb5ec', 
                                          'x-rapidapi-host' = 'api-nba-v1.p.rapidapi.com'), 
-                        content_type("application/octet-stream"))
+                        content_type("application/octet-stream")) #supplying necessary key, host, and content type information
   
-  parsed_nba_info <- fromJSON(rawToChar(response$content))
+  parsed_players_info <- fromJSON(rawToChar(players_response$content)) #parsing the returned players data
   
-  players_data1 <- as_tibble(parsed_nba_info$response) #pulling response
+  players_data1 <- as_tibble(parsed_players_info$response) #pulling response from parsed players data
+
+  #Recoding nested variables in order to access them
+  #I kept running into errors attempting this with "rename" from tidyverse, so I did baseR coding
+  players_data1$birth_date <- players_data1$birth$date
+  players_data1$birth_country <- players_data1$birth$country
+  players_data1$nba_start <- players_data1$nba$start
+  players_data1$nba_pro <- players_data1$nba$pro
+  players_data1$height_inches <- as.numeric(players_data1$height$feet) * 12 + as.numeric(players_data1$height$inches)
+  players_data1$weight_pounds <- as.numeric(players_data1$weight$pounds)
+  players_data1$pos <- players_data1$leagues$standard$pos
   
-  players_data <- players_data1[(!is.na(players_data1$height$meters)), ]
-  players_data$height_meters <- as.numeric(players_data$height$meters)
-  players_data$weight_pounds <- as.numeric(players_data$weight$pounds)
-  players_data$pos <- players_data$leagues$standard$pos
-  players_data$birth_country <- players_data$birth$country
+  #Selecting necessary variables for plots
+  players_data <- players_data1 |>
+    select(id, firstname, lastname, birth_date, birth_country, nba_start, nba_pro, height_inches, weight_pounds, pos)
   
   return(players_data)
 }
 
 #Team Statistics Data
 team_stats_query <- function(season, team){
-  url <- paste0("https://api-nba-v1.p.rapidapi.com/players/statistics?", #base of URL
+  teams_url <- paste0("https://api-nba-v1.p.rapidapi.com/players/statistics?", #base of URL
                 "&season=", season, #adding season to URL
                 "&team=", team #adding team to URL
   )
   
-  response <- httr::GET(url, add_headers('x-rapidapi-key' = '9086777ffcmsh8e20ab7c07d978ep14073cjsndbf0615eb5ec', 
+  teams_response <- httr::GET(teams_url, add_headers('x-rapidapi-key' = '9086777ffcmsh8e20ab7c07d978ep14073cjsndbf0615eb5ec', 
                                          'x-rapidapi-host' = 'api-nba-v1.p.rapidapi.com'), 
-                        content_type("application/octet-stream"))
+                        content_type("application/octet-stream")) #supplying necessary key, host, and content type information
   
-  parsed_nba_info <- fromJSON(rawToChar(response$content))
+  parsed_teams_info <- fromJSON(rawToChar(teams_response$content)) #parsing the returned teams data
   
-  team_data1 <- as_tibble(parsed_nba_info$response)
+  team_data1 <- as_tibble(parsed_teams_info$response) #pulling response from parsed teams data
   
+  #Recoding nested variables in order to access them
+  #I kept running into errors attempting this with "rename" from tidyverse, so I did baseR coding
   team_data1$first_name <- team_data1$player$firstname
   team_data1$last_name <- team_data1$player$lastname
-  team_data1$min1 <- strptime(team_data1$min, format = "%M:%S")
-  team_data1$minutes1 <- round_date(team_data1$min1, unit = "1 minute")
-  team_data1$minutes <- minute(team_data1$minutes1)
-  team_data1$starter <- ifelse(is.na(team_data1$pos), NA, 1)
+  team_data1$min1 <- strptime(team_data1$min, format = "%M:%S") #converting minutes played from character to time
   
-  team_data <- team_data1 %>%
-    group_by(first_name, last_name) %>%
-    mutate(games_not_played = sum(minutes < 1 | is.na(minutes))) %>%
-    mutate(games = n()) %>%
-    mutate(games_played = n() - games_not_played) %>%
-    mutate(games_started = sum(starter, na.rm = TRUE)) %>%
-    mutate(games_start_pct = games_started/games_played) %>%
-    mutate(overall_ppg = sum(points, na.rm = TRUE)/games_played) %>%
-    mutate(overall_rpg = sum(totReb, na.rm = TRUE)/games_played) %>%
-    mutate(overall_mpg = sum(minutes, na.rm = TRUE)/games_played) %>%
-    fill(starter, .direction = "downup") %>%
+  team_data <- team_data1 |>
+    mutate(minutes1 = round_date(min1, unit = "1 minute")) |> #rounding minutes played to the nearest minute
+    mutate(minutes = minute(minutes1)) |> #
+    mutate(starter = ifelse(is.na(pos), NA, 1)) |>
+    group_by(first_name, last_name) |>
+    mutate(games_not_played = sum(minutes < 1 | is.na(minutes))) |>
+    mutate(games = n()) |>
+    mutate(games_played = n() - games_not_played) |>
+    mutate(games_started = sum(starter, na.rm = TRUE)) |>
+    mutate(games_start_pct = games_started/games_played) |>
+    mutate(overall_ppg = sum(points, na.rm = TRUE)/games_played) |>
+    mutate(overall_rpg = sum(totReb, na.rm = TRUE)/games_played) |>
+    mutate(overall_mpg = sum(minutes, na.rm = TRUE)/games_played) |>
+    fill(starter, .direction = "downup") |>
     select(first_name, last_name, overall_ppg, overall_rpg, overall_mpg, games, 
-           games_played, games_not_played, games_started, games_start_pct, starter) %>%
+           games_played, games_not_played, games_started, games_start_pct, starter) |>
     distinct()
   
   team_data$likely_starter <- ifelse(team_data$games_start_pct > 0.5, 1, 0)
@@ -166,7 +173,7 @@ ui <- fluidPage(
         "<p>The About tab contains information on the broader project. The Data Download tab displays and downloads the data tables retrieves from the API given certain user selected inputs. The Data Exploration tab contains data visualization based on several metrics. There are plots for wins and losses, points scored and rebounds by minute played, and player body dimensions by position. </p>"))),
       
       # Data Download Tab--
-      nav_panel("Data Download", tableOutput("standings"), tableOutput("team_table"), tableOutput("players_table")),
+      nav_panel("Data Download", tableOutput("standings_table"), tableOutput("team_table"), tableOutput("players_table")),
       
       # Data Exploration Tab ----
       nav_panel("Data Exploration", plotOutput("standingsPlot"), plotOutput("teamPlot1"), plotOutput("teamPlot2"), plotOutput("playersPlot"), textOutput("info"))
@@ -182,7 +189,7 @@ server <- function(input, output, session) {
     season <- input$seasons
     team <- as.numeric(gsub("([0-9]+).*$", "\\1", input$teams))
     
-    newstandingsData <- team_stats_query(season, team) 
+    newstandingsData <- standings_query(season, team) 
     newstandingsData
   })
   
@@ -201,30 +208,36 @@ server <- function(input, output, session) {
     team <- as.numeric(gsub("([0-9]+).*$", "\\1", input$teams))
     positions <- input$positions
 
-    newplayersData <- players_query(season, team) %>% filter(pos == positions)
+    newplayersData <- players_query(season, team) |> filter(pos == positions)
     newplayersData
   })
   
   #Display data
   #create output of observations
-  output$standings <- renderTable({
+  output$standings_table <- renderTable({
     #get data
     standingstableData <- getstandingsData()
+    #write csv
     write.csv(standingstableData, "standingsData.csv")
-    head(standingstableData)
+    #display data
+    standingstableData
   })
   
   output$team_table <- renderTable({
     #get data
     teamtableData <- getteamData()
+    #write csv
     write.csv(teamtableData, "teamData.csv")
+    #display data
     teamtableData
   })
   
   output$players_table <- renderTable({
     #get data
     playerstableData <- getplayersData()
+    #write csv
     write.csv(playerstableData, "playersData.csv")
+    #display data
     head(playerstableData)
   })
   
@@ -274,8 +287,8 @@ server <- function(input, output, session) {
       playersData <- getplayersData()
       
       #base plotting object
-      g <- ggplot(playersData, aes(x = weight_pounds, y = height_meters, label = lastname)) + 
-        geom_point(size = input$size) + geom_text(hjust = 0, nudge_x = 0.20) + labs(title = "Player Body Dimensions", y = "Height (Meters)", x = "Weight (Pounds)")
+      g <- ggplot(playersData, aes(x = weight_pounds, y = height_inches, label = lastname)) + 
+        geom_point(size = input$size) + geom_text(hjust = 0, nudge_x = 0.20) + labs(title = "Player Body Dimensions", y = "Height (Inches)", x = "Weight (Pounds)")
       
       g
     })
