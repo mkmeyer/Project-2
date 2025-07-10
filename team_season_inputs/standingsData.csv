@@ -1,0 +1,11 @@
+"","league","season","team.id","team.name","team.nickname","team.code","team.logo","conference_name","conference_rank","division_rank","win_pct","loss_pct","Metric","Count"
+"1","standard",2019,1,Atlanta Hawks,Hawks,ATL,https://upload.wikimedia.org/wikipedia/fr/e/ee/Hawks_2016.png,"east",14,5,0.299,0.701,"win_total",20
+"2","standard",2019,1,Atlanta Hawks,Hawks,ATL,https://upload.wikimedia.org/wikipedia/fr/e/ee/Hawks_2016.png,"east",14,5,0.299,0.701,"loss_total",47
+"3","standard",2019,1,Atlanta Hawks,Hawks,ATL,https://upload.wikimedia.org/wikipedia/fr/e/ee/Hawks_2016.png,"east",14,5,0.299,0.701,"conference_win",11
+"4","standard",2019,1,Atlanta Hawks,Hawks,ATL,https://upload.wikimedia.org/wikipedia/fr/e/ee/Hawks_2016.png,"east",14,5,0.299,0.701,"conference_loss",32
+"5","standard",2019,1,Atlanta Hawks,Hawks,ATL,https://upload.wikimedia.org/wikipedia/fr/e/ee/Hawks_2016.png,"east",14,5,0.299,0.701,"division_win", 6
+"6","standard",2019,1,Atlanta Hawks,Hawks,ATL,https://upload.wikimedia.org/wikipedia/fr/e/ee/Hawks_2016.png,"east",14,5,0.299,0.701,"division_loss", 7
+"7","standard",2019,1,Atlanta Hawks,Hawks,ATL,https://upload.wikimedia.org/wikipedia/fr/e/ee/Hawks_2016.png,"east",14,5,0.299,0.701,"win_home",14
+"8","standard",2019,1,Atlanta Hawks,Hawks,ATL,https://upload.wikimedia.org/wikipedia/fr/e/ee/Hawks_2016.png,"east",14,5,0.299,0.701,"loss_home",20
+"9","standard",2019,1,Atlanta Hawks,Hawks,ATL,https://upload.wikimedia.org/wikipedia/fr/e/ee/Hawks_2016.png,"east",14,5,0.299,0.701,"win_away", 6
+"10","standard",2019,1,Atlanta Hawks,Hawks,ATL,https://upload.wikimedia.org/wikipedia/fr/e/ee/Hawks_2016.png,"east",14,5,0.299,0.701,"loss_away",27

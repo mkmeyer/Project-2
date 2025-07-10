@@ -64,6 +64,24 @@ standings_query <- function(season, team){
   
   parsed_nba_info <- fromJSON(rawToChar(response$content))
   standings_data <- as_tibble(parsed_nba_info$response) #pulling response
+  
+  standings_data$conference_name <- as.numeric(standings_data$conference$name)
+  standings_data$conference_rank <- as.numeric(standings_data$conference$rank)
+  standings_data$division_rank <- as.numeric(standings_data$division$rank)
+  standings_data$win_pct <- as.numeric(standings_data$win$percentage)
+  standings_data$loss_pct <- as.numeric(standings_data$loss$percentage)
+  standings_data$win_total <- as.numeric(standings_data$win$total)
+  standings_data$loss_total <- as.numeric(standings_data$loss$total)
+  
+  standings_data$conference_win <- as.numeric(standings_data$conference$win)
+  standings_data$conference_loss <- as.numeric(standings_data$conference$loss)
+  standings_data$division_win <- as.numeric(standings_data$division$win)
+  standings_data$division_loss <- as.numeric(standings_data$division$loss)
+  standings_data$win_home <- as.numeric(standings_data$win$home)
+  standings_data$loss_home <- as.numeric(standings_data$loss$home)
+  standings_data$win_away <- as.numeric(standings_data$win$away)
+  standings_data$loss_away <- as.numeric(standings_data$loss$away)
+  
   return(standings_data)
 }
 
@@ -412,3 +430,46 @@ merged <- merge(player, team_data, by=c("id"))
 team_data2 <- team_data$player %>%
   rename(first_name = firstname)
 ```
+
+
+```{r}
+getstandingsData <- function(season, team){
+    newstandingsData <- standings_query(season, team) 
+    newstandingsData
+  }
+
+standings <- renderTable({
+    #get data
+    standingstableData <- getstandingsData()
+    write.csv(standingstableData, "teamData.csv")
+    head(standingstableData)
+  })
+
+standingstableData <- getstandingsData(2020, 1)
+write.csv(standingstableData, "teamData.csv")
+head(standingstableData)
+
+standingsdata_long <- standings_data %>%
+    pivot_longer(cols = 17:26, 
+                 names_to = "Metric", 
+                 values_to = "Count") %>%
+   select(c(1:3, 12:18))
+
+g <- ggplot(standingsData_long, aes(x = Metric, y = Count)) + geom_bar(stat = "identity")
+g
+```
+
+```{r}
+  #create text info
+  output$about <- renderText({
+    #paste info out
+    HTML(paste0("<p> The purpose of this app is to explore NBA data. I have been a college basketball fan and WNBA basketball fan for a few years, but I have often felt overwhelmed trying to learn about the NBA. There are so many teams and so much history! My goal with this app is to describe and display information for different combinations of teams, seasons, and positions in order to visualize trends in the NBA and for specific teams and seasons.</p>", "This app uses data from "))
+    
+    br()
+    
+    paste0("<p> The purpose of this app is to explore NBA data. I have been a college basketball fan and WNBA basketball fan for a few years, but I have often felt overwhelmed trying to learn about the NBA. There are so many teams and so much history! My goal with this app is to describe and display information for different combinations of teams, seasons, and positions in order to visualize trends in the NBA and for specific teams and seasons.</p>", "This app uses data from ")
+    
+    
+  })
+```
+
