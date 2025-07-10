@@ -100,7 +100,13 @@ players_query <- function(season, team){
                         content_type("application/octet-stream"))
   
   parsed_nba_info <- fromJSON(rawToChar(response$content))
-  players_data <- as_tibble(parsed_nba_info$response) #pulling response
+  players_data1 <- as_tibble(parsed_nba_info$response) #pulling response
+  
+  players_data <- players_data1[(!is.na(players_data1$height$meters)), ]
+  players_data$height_meters <- as.numeric(players_data$height$meters)
+  players_data$weight_pounds <- as.numeric(players_data$weight$pounds)
+  players_data$leagues_standard_pos <- players_data$leagues$standard$pos
+  players_data$birth_country <- players_data$birth$country
   return(players_data)
 }
 
@@ -252,7 +258,7 @@ content(response, "text")
 teams <- fromJSON(rawToChar(response$content))
 team_data <- as_tibble(teams$response) #pulling response
 nba_teams <- team_data[(team_data$nbaFranchise == TRUE), ]
-nba_teams_ids <- nba_teams$id
+nba_teams_list <- paste(nba_teams$id, nba_teams$name, sep = " ")
 ```
 
 ```{r}
@@ -345,3 +351,67 @@ Data Exploration tab
   })
   
 ```
+
+
+```{r}
+rm(list=ls())
+team_stats_query <- function(season, team){
+  url <- paste0("https://api-nba-v1.p.rapidapi.com/players/statistics?", #base of URL
+                "&season=", season, #adding season to URL
+                "&team=", team #adding team to URL
+  )
+  
+  response <- httr::GET(url, add_headers('x-rapidapi-key' = '9086777ffcmsh8e20ab7c07d978ep14073cjsndbf0615eb5ec', 
+                                         'x-rapidapi-host' = 'api-nba-v1.p.rapidapi.com'), 
+                        content_type("application/octet-stream"))
+  
+  parsed_nba_info <- fromJSON(rawToChar(response$content))
+  
+  #Performing Data Cleaning
+  team_data1 <- as_tibble(parsed_nba_info$response) #pulling response
+  return(team_data1)
+}
+
+#Data cleaning function
+
+cleaning <- function(team_data1) {
+  team_data1$first_name <- team_data1$player$firstname
+  team_data1$last_name <- team_data1$player$lastname
+  team_data1$min1 <- strptime(team_data1$min, format = "%M:%S")
+  team_data1$minutes1 <- round_date(team_data1$min1, unit = "1 minute")
+  team_data1$minutes <- minute(team_data1$minutes1)
+  team_data1$starter <- ifelse(is.na(team_data1$pos), NA, 1)
+
+  team_data <- team_data1 %>%
+    group_by(first_name, last_name) %>%
+    mutate(games_not_played = sum(minutes < 1 | is.na(minutes))) %>%
+    mutate(games = n()) %>%
+    mutate(games_played = n() - games_not_played) %>%
+    mutate(games_started = sum(starter, na.rm = TRUE)) %>%
+    mutate(games_start_pct = games_started/games_played) %>%
+    mutate(overall_ppg = sum(points, na.rm = TRUE)/games_played) %>%
+    mutate(overall_rpg = sum(totReb, na.rm = TRUE)/games_played) %>%
+    mutate(overall_mpg = sum(minutes, na.rm = TRUE)/games_played) %>%
+    fill(starter, .direction = "downup") %>%
+    select(first_name, last_name, overall_ppg, overall_rpg, overall_mpg, games, games_played, games_not_played, games_started, games_start_pct, starter) %>%
+    distinct()
+
+  team_data$likely_starter <- ifelse(team_data$games_start_pct > 0.5, 1, 0)
+  return(team_data)
+}
+
+
+
+# }
+
+team_data <- team_stats_query(2015, 1)
+
+team_final <- cleaning(team_data)
+
+player <- team_data$player
+merged <- merge(player, team_data, by=c("id"))
+
+team_data2 <- team_data$player %>%
+  rename(first_name = firstname)
+```
+
