@@ -267,7 +267,6 @@ season_options <- 2015:2024
 team_options <- nba_teams_ids
 ```
 
-
 ### Question 3: Writing a Function to Query the API
 
 ```{r}
@@ -352,7 +351,6 @@ Data Exploration tab
   
 ```
 
-
 ```{r}
 rm(list=ls())
 team_stats_query <- function(season, team){
@@ -414,4 +412,3 @@ merged <- merge(player, team_data, by=c("id"))
 team_data2 <- team_data$player %>%
   rename(first_name = firstname)
 ```
-

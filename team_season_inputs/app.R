@@ -118,7 +118,7 @@ nba_teams_list <- paste(nba_teams$id, nba_teams$name, sep = " ")
 ui <- fluidPage(
   
   # Application title
-  titlePanel("NBA Player Statistics Data"),
+  titlePanel("NBA Statistics"),
   
   # Sidebar with options for the data set
   sidebarLayout(
@@ -199,18 +199,15 @@ server <- function(input, output, session) {
   
   #create plot
   output$playersPlot <- renderPlot({
-    #get data
-    playersData <- getplayersData()
-
-    #base plotting object
-    output$playersPlot <- renderPlot({
       #get data
       playersData <- getplayersData()
       
       #base plotting object
-      g <- ggplot(playersData, aes(x = weight_pounds, y = height_meters, label = lastname)) + geom_text(hjust = 0, nudge_x = 0.20)
+      g <- ggplot(playersData, aes(x = weight_pounds, y = height_meters, label = lastname)) + 
+        geom_point(size = input$size) + geom_text(hjust = 0, nudge_x = 0.20)
+      
+      g
     })
-
   
   #create text info
   output$info <- renderText({
