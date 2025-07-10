@@ -23,13 +23,13 @@ ui <- fluidPage(
   sidebarLayout(
     sidebarPanel(
       h3("Select the position:"),
-      selectizeInput("leagues_standard_pos", "leagues_standard_pos", selected = "G", choices = levels(as.factor(players_data$leagues_standard_pos))),
+      selectizeInput("leagues_standard_pos", "Position", selected = "G", choices = levels(as.factor(players_data$leagues_standard_pos))),
       
       br(),
       
       sliderInput("size", "Size of Points on Graph",
                   min = 1, max = 10, value = 5, step = 1),
-      checkboxInput("birth_country", h4("birth_country", style = "color:red;"))
+      checkboxInput("birth_country", h4("birth_country", style = "color:black;"))
     ),
     
     # Show outputs?msle
@@ -57,7 +57,7 @@ server <- function(input, output, session) {
     playersData <- getData()
     
     #base plotting object
-    g <- ggplot(playersData, aes(x = height_meters, y = weight_pounds))
+    g <- ggplot(playersData, aes(x = weight_pounds, y = height_meters, label = lastname)) + geom_text(hjust = 0, nudge_x = 0.20)
     
     if (input$birth_country) {
       g + geom_point(size = input$size, aes(col = birth_country))
@@ -72,7 +72,7 @@ server <- function(input, output, session) {
     playersData <- getData()
     
     #paste info out
-    paste("The average body weight for leagues$standard$pos", input$leagues_standard_pos, "is", round(mean(playersData$height_meters, na.rm = TRUE), 2), "and the average total sleep time is", round(mean(playersData$weight_pounds, na.rm = TRUE), 2), sep = " ")
+    paste("The average body height for the", input$leagues_standard_pos, "position is", round(mean(playersData$height_meters, na.rm = TRUE), 2), "meters", "and the average weight is", round(mean(playersData$weight_pounds, na.rm = TRUE), 2), "pounds", sep = " ")
     
   })
   
