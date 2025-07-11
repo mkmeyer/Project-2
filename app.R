@@ -257,14 +257,14 @@ server <- function(input, output, session) {
     paste("This data was downloaded from the players endpoint using the user provided inputs for team and season") 
   })
 
-  #creating the playerss data
+  #creating the players data
   output$playersTable <- renderTable({
     #get data
     playerstableData <- getplayersData()
     #write csv
     write.csv(playerstableData, "playersData.csv")
     #display data
-    head(playerstableData)
+    playerstableData
   })
   
   #create text info explaining the records table
