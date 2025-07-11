@@ -44,7 +44,7 @@ standings_query <- function(season, team){
   standings_data$away_loss <- as.numeric(standings_data$loss$away)
   
   standings_data <- standings_data |>
-    select(c(1, 2, 13:28))
+    select(c(season, team_name, conference_name, conference_rank, division_rank, win_pct, loss_pct, total_win, total_loss, conference_win, conference_loss, division_win, division_loss, home_win, home_loss, away_win, away_loss))
   
   return(standings_data)
 }
@@ -142,7 +142,7 @@ nba_teams_list <- paste(nba_teams$id, nba_teams$name, sep = " ") #combining team
 
 #Creating lists of positions and divisions of play for user input
 #These are variables within the data set, and user input will subset the data
-positions <- c("G", "SF", "SG", "PF", "C", "F", "F-C", "F-G", "G-F")
+positions <- c("All", "G", "SF", "SG", "PF", "C", "F", "F-C", "F-G", "G-F")
 divisions <- c("Overall", "Conference", "Division", "Home", "Away")
 
 ui <- fluidPage(
@@ -316,7 +316,7 @@ server <- function(input, output, session) {
     
     #converting the dataset into long form for better plotting use
     standingsdata_long <- standingsData |>
-      pivot_longer(cols = 9:18, #selecting numeric columns
+      pivot_longer(cols = 9:17, #selecting numeric columns
                    names_to = "Metric", 
                    values_to = "Count")
     
@@ -425,6 +425,8 @@ server <- function(input, output, session) {
       filter(!is.na(birth_country))
     
     #creating the plot
+    world_map <- map_data(map = "world")
+    
     g <- ggplot(mapData) +
       geom_map(aes(map_id = birth_country, fill = as.factor(counts)), map = world_map) +
       geom_polygon(data = world_map, aes(x = long, y = lat, group = group), colour = 'black', fill = NA) +
