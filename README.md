@@ -6,3 +6,5 @@ To run this app, the following packages are needed: shiny, tidyverse, jsonlite, 
 All of those packages can be installed using this line of code:  install.packages(c("shiny", "tidyverse", "jsonlite", "httr", "ggplot2", "bslib", "maps"))
 
 To run the app, use this code: shiny::runGitHub('Project-2', 'mkmeyer')
+
+I also want to provide credit that when I was trying to find a new graph to include and had the idea to make a world map, I was unsure where to begin. I googled and found this (https://stackoverflow.com/questions/71858134/create-ggplot2-map-in-r-using-count-by-country) stack overflow post very helpful.

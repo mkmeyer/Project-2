@@ -1,11 +1,2 @@
-"","league","team_id","team_name","conference_name","conference_rank","division_rank","win_pct","loss_pct","Metric","Count"
-"1","standard",1,"Atlanta Hawks","east",5,1,0.569,0.431,"win_total",41
-"2","standard",1,"Atlanta Hawks","east",5,1,0.569,0.431,"loss_total",31
-"3","standard",1,"Atlanta Hawks","east",5,1,0.569,0.431,"conference_win",24
-"4","standard",1,"Atlanta Hawks","east",5,1,0.569,0.431,"conference_loss",18
-"5","standard",1,"Atlanta Hawks","east",5,1,0.569,0.431,"division_win",9
-"6","standard",1,"Atlanta Hawks","east",5,1,0.569,0.431,"division_loss",3
-"7","standard",1,"Atlanta Hawks","east",5,1,0.569,0.431,"win_home",25
-"8","standard",1,"Atlanta Hawks","east",5,1,0.569,0.431,"loss_home",11
-"9","standard",1,"Atlanta Hawks","east",5,1,0.569,0.431,"win_away",16
-"10","standard",1,"Atlanta Hawks","east",5,1,0.569,0.431,"loss_away",20
+"","league","season","team_name","conference_name","conference_rank","division_rank","win_pct","loss_pct","total_win","total_loss","conference_win","conference_loss","division_win","division_loss","home_win","home_loss","away_win","away_loss"
+"1","standard",2020,"Atlanta Hawks","east",5,1,0.569,0.431,41,31,24,18,9,3,25,11,16,20
