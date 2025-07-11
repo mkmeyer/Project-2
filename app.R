@@ -144,6 +144,8 @@ nba_teams_list <- paste(nba_teams$id, nba_teams$name, sep = " ") #combining team
 #These are variables within the data set, and user input will subset the data
 positions <- c("All", "G", "SF", "SG", "PF", "C", "F", "F-C", "F-G", "G-F")
 divisions <- c("Overall", "Conference", "Division", "Home", "Away")
+world_map <- map_data(map = "world")
+
 
 ui <- fluidPage(
   
