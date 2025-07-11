@@ -5,6 +5,7 @@ library("jsonlite")
 library("httr")
 library("ggplot2")
 library("bslib")
+library("maps")
 
 #Creating Functions to Read in the Data
 #Function to read in Team Standings Data
@@ -107,39 +108,46 @@ team_stats_query <- function(season, team){
   
   team_data <- team_data1 |>
     mutate(minutes1 = round_date(min1, unit = "1 minute")) |> #rounding minutes played to the nearest minute
-    mutate(minutes = minute(minutes1)) |> #
-    mutate(starter = ifelse(is.na(pos), NA, 1)) |>
+    mutate(minutes = minute(minutes1)) |> #extracting only the minutes part of time
+    mutate(starter = ifelse(is.na(pos), NA, 1)) |> #classifying starters as those with assigned positions
     group_by(first_name, last_name) |>
-    mutate(games_not_played = sum(minutes < 1 | is.na(minutes))) |>
+    mutate(games_not_played = sum(minutes = 0 | is.na(minutes))) |> #classifying games not played as those with 0 minutes played
     mutate(games = n()) |>
     mutate(games_played = n() - games_not_played) |>
     mutate(games_started = sum(starter, na.rm = TRUE)) |>
     mutate(games_start_pct = games_started/games_played) |>
-    mutate(overall_ppg = sum(points, na.rm = TRUE)/games_played) |>
-    mutate(overall_rpg = sum(totReb, na.rm = TRUE)/games_played) |>
-    mutate(overall_mpg = sum(minutes, na.rm = TRUE)/games_played) |>
+    mutate(overall_ppg = sum(points, na.rm = TRUE)/games_played) |> #calculating points per game
+    mutate(overall_rpg = sum(totReb, na.rm = TRUE)/games_played) |> #calculating rebounds per game
+    mutate(overall_apg = sum(assists, na.rm = TRUE)/games_played) |> #calculating assists per game
+    mutate(overall_mpg = sum(minutes, na.rm = TRUE)/games_played) |> #calculating minutes per game
+    mutate(likely_starter = ifelse(games_start_pct > 0.5, 1, 0)) |> #classifying likely starters as those who started in more than 50% of the games they played
     fill(starter, .direction = "downup") |>
-    select(first_name, last_name, overall_ppg, overall_rpg, overall_mpg, games, 
-           games_played, games_not_played, games_started, games_start_pct, starter) |>
+    select(first_name, last_name, pos, overall_ppg, overall_apg, overall_rpg, overall_mpg, points, totReb, assists, games, 
+           games_played, games_not_played, games_started, games_start_pct, starter, likely_starter) |>
     distinct()
-  
-  team_data$likely_starter <- ifelse(team_data$games_start_pct > 0.5, 1, 0)
   
   return(team_data)
 }
 
-#Creating a list of options of seasons and positions
+#Creating a lists of options for user input for seasons and teams
+#These options will affect what the API retrieves
 seasons <- c(2015:2024)
-positions <- c("G", "SF", "SG", "PF", "C", "F", "F-C", "F-G", "G-F")
+nbateams_url <- "https://api-nba-v1.p.rapidapi.com/teams" #base URL to extract NBA teams from API
+nbateams_response <- httr::GET(nbateams_url, 
+                      add_headers('x-rapidapi-key' = '9086777ffcmsh8e20ab7c07d978ep14073cjsndbf0615eb5ec', 
+                                  'x-rapidapi-host' = 'api-nba-v1.p.rapidapi.com'), 
+                      content_type("application/octet-stream")) #accessing the API
 
-#Creating list of options of NBA teams
-url <- "https://api-nba-v1.p.rapidapi.com/teams"
-response <- VERB("GET", url, add_headers('x-rapidapi-key' = '9086777ffcmsh8e20ab7c07d978ep14073cjsndbf0615eb5ec', 'x-rapidapi-host' = 'api-nba-v1.p.rapidapi.com'), content_type("application/octet-stream"))
-content(response, "text")
-teams <- fromJSON(rawToChar(response$content))
-team_data <- as_tibble(teams$response) #pulling response
-nba_teams <- team_data[(team_data$nbaFranchise == TRUE), ]
-nba_teams_list <- paste(nba_teams$id, nba_teams$name, sep = " ")
+teams <- fromJSON(rawToChar(nbateams_response$content))
+team_data <- as_tibble(teams$response) #pulling list of teams
+
+nba_teams <- team_data[(team_data$nbaFranchise == TRUE), ] #selecting only NBA teams
+nba_teams_list <- paste(nba_teams$id, nba_teams$name, sep = " ") #combining team ID and team name
+
+#Creating lists of positions and divisions of play for user input
+#These are variables within the data set, and user input will subset the data
+positions <- c("G", "SF", "SG", "PF", "C", "F", "F-C", "F-G", "G-F")
+divisions <- c("Overall", "Conference", "Division", "Home", "Away")
 
 ui <- fluidPage(
   
@@ -155,11 +163,16 @@ ui <- fluidPage(
       h3("Select the team:"),
       selectizeInput("teams", "Team", selected = "1 Atlanta Hawks", choices = levels(as.factor(nba_teams_list))),
       
+      h3("Select the Division:"),
+      selectizeInput("divisions", "Division", selected = "Overall", choices = levels(as.factor(divisions))),
+      
       h3("Select the position:"),
       selectizeInput("positions", "Position", selected = "G", choices = levels(as.factor(positions))),
       
       sliderInput("size", "Size of Points on Graph",
                   min = 1, max = 10, value = 5, step = 1),
+      
+      checkboxInput("games_start_pct", h4("Percent Games Started", style = "color:black;")),
       
       checkboxInput("games_start_pct", h4("Percent Games Started", style = "color:black;"))
     ),
@@ -168,15 +181,17 @@ ui <- fluidPage(
       # About tab----
       nav_panel("About", HTML(paste0(
         "<img style = 'display: block; margin-left: auto; margin-right: auto;' src='https://images.ctfassets.net/h8q6lxmb5akt/5qXnOINbPrHKXWa42m6NOa/421ab176b501f5bdae71290a8002545c/nba-logo_2x.png' width = '186'></a>",
-        "<p>The purpose of this app is to explore NBA data. I have been a college basketball fan and WNBA basketball fan for a few years, but I have often felt overwhelmed trying to learn about the NBA. There are so many teams and so much history! My goal with this app is to describe and display information for different combinations of teams, seasons, and positions in order to visualize trends in the NBA and for specific teams and seasons.</p>",
+        "<p>The purpose of this app is to explofre NBA data. I have been a college basketball fan and WNBA basketball fan for a few years, but I have often felt overwhelmed trying to learn about the NBA. There are so many teams and so much history! My goal with this app is to describe and display information for different combinations of teams, seasons, and positions in order to visualize trends in the NBA and for specific teams and seasons.</p>",
         "<p>This data is sourced from <a href = 'https://rapidapi.com/api-sports/api/api-nba' >Rapid API</a>. I found this using the <a href = 'https://github.com/public-apis/public-apis?tab=readme-ov-file#sports--fitness' >GitHub</a> link provided for this project. I had to make an API key for this project, but did not need to pay for a subscription. I ended up making so many calls that I purchased one, but I was too far into the project to turn back. This likely wouldn't be an issue for a user, but was just because I was calling the API so much for trial and error. This data contains information on standings, teams, and players from roughly the years of 2014-2024. There are occasionally years of missing data from certain teams.</p>",
         "<p>The About tab contains information on the broader project. The Data Download tab displays and downloads the data tables retrieves from the API given certain user selected inputs. The Data Exploration tab contains data visualization based on several metrics. There are plots for wins and losses, points scored and rebounds by minute played, and player body dimensions by position. </p>"))),
       
       # Data Download Tab--
-      nav_panel("Data Download", tableOutput("standings_table"), tableOutput("team_table"), tableOutput("players_table")),
+      nav_panel("Data Download", tableOutput("standingsTable"), tableOutput("teamTable"), tableOutput("playersTable")),
       
       # Data Exploration Tab ----
-      nav_panel("Data Exploration", plotOutput("standingsPlot"), plotOutput("teamPlot1"), plotOutput("teamPlot2"), plotOutput("playersPlot"), textOutput("info"))
+      nav_panel("Data Exploration-Overall Team Data", tableOutput("recordTable"), plotOutput("standingsPlot"), plotOutput("teamPlot1"), plotOutput("teamPlot2")),
+      # Data Exploration Tab ----
+      nav_panel("Data Exploration-Position and Player Data", tableOutput("positionsTable"), plotOutput("playersoverallPlot"), plotOutput("playerssubsetPlot"), textOutput("info"), plotOutput("mapPlot"))
     )
   )
 )
@@ -208,13 +223,13 @@ server <- function(input, output, session) {
     team <- as.numeric(gsub("([0-9]+).*$", "\\1", input$teams))
     positions <- input$positions
 
-    newplayersData <- players_query(season, team) |> filter(pos == positions)
+    newplayersData <- players_query(season, team)
     newplayersData
   })
   
   #Display data
   #create output of observations
-  output$standings_table <- renderTable({
+  output$standingsTable <- renderTable({
     #get data
     standingstableData <- getstandingsData()
     #write csv
@@ -223,7 +238,7 @@ server <- function(input, output, session) {
     standingstableData
   })
   
-  output$team_table <- renderTable({
+  output$teamTable <- renderTable({
     #get data
     teamtableData <- getteamData()
     #write csv
@@ -232,7 +247,7 @@ server <- function(input, output, session) {
     teamtableData
   })
   
-  output$players_table <- renderTable({
+  output$playersTable <- renderTable({
     #get data
     playerstableData <- getplayersData()
     #write csv
@@ -241,8 +256,30 @@ server <- function(input, output, session) {
     head(playerstableData)
   })
   
-  #create a standings data table table
+  #create a standings table
+  output$recordTable <- renderTable({
+    #get data
+    standingsData <- getstandingsData()
+    
+    if (input$divisions == "Away") {
+      away <- standingsData |> filter(Metric == "win_away" | Metric == "loss_away") |> select(Metric, Count)
+      away
+    } else if (input$divisions == "Home") {
+      home <- standingsData |> filter(Metric == "win_home" | Metric == "loss_home") |> select(Metric, Count)
+      home
+    } else if (input$divisions == "Conference") {
+      con <- standingsData |> filter(Metric == "conference_win" | Metric == "conference_loss") |> select(conference_rank, Metric, Count)
+      con
+    } else if (input$divisions == "Division") {
+      div <- standingsData |> filter(Metric == "division_win" | Metric == "division_loss") |> select(division_rank, Metric, Count)
+      div
+      } else {
+      overall <- standingsData |> filter(Metric == "win_total" | Metric == "loss_total") |> select(Metric, Count)
+      overall
+    }
+  })
   
+  #create a standings plot
   output$standingsPlot <- renderPlot({
     #get data
     standingsData <- getstandingsData()
@@ -281,17 +318,46 @@ server <- function(input, output, session) {
     }
   })
   
+  output$positionsTable <- renderTable({
+    #get data
+    teamData <- getteamData()
+    
+    position_groups <- teamData |>
+      group_by(pos) |>
+      filter(!is.na(pos)) |>
+      mutate(total_points = sum(points, na.rm = TRUE)) |>
+      mutate(total_rebounds = sum(totReb, na.rm = TRUE)) |>
+      mutate(avg_points = mean(overall_ppg, na.rm = TRUE)) |>
+      mutate(avg_assists = mean(overall_apg, ra.rm = TRUE)) |> 
+      mutate(avg_rebounds = mean(overall_rpg, ra.rm = TRUE)) |> 
+      mutate(total_assists = sum(assists, na.rm = TRUE)) |>
+      select(pos, total_points, total_assists, total_rebounds, avg_points, avg_assists, avg_rebounds) |>
+      distinct()
+    
+    position_groups
+  })
+  
   #create plot
-  output$playersPlot <- renderPlot({
+  output$playersoverallPlot <- renderPlot({
       #get data
       playersData <- getplayersData()
       
       #base plotting object
-      g <- ggplot(playersData, aes(x = weight_pounds, y = height_inches, label = lastname)) + 
+      g <- ggplot(playersData, aes(x = weight_pounds, y = height_inches, label = lastname, col = pos)) + 
         geom_point(size = input$size) + geom_text(hjust = 0, nudge_x = 0.20) + labs(title = "Player Body Dimensions", y = "Height (Inches)", x = "Weight (Pounds)")
       
       g
     })
+  
+  output$playerssubsetPlot <- renderPlot({
+    #get data
+    playersData <- getplayersData() |> filter(pos == input$positions)
+    
+    #base plotting object
+    g <- ggplot(playersData, aes(x = weight_pounds, y = height_inches, label = lastname)) + 
+      geom_point(size = input$size) + geom_text(hjust = 0, nudge_x = 0.20) + labs(title = "Player Body Dimensions", y = "Height (Inches)", x = "Weight (Pounds)")
+    g
+  })
   
   #create text info
   output$info <- renderText({
@@ -299,7 +365,32 @@ server <- function(input, output, session) {
     playersData <- getplayersData()
 
     #paste info out
-    paste("The average body height for the", input$positions, "position on the", input$teams,"is", round(mean(playersData$height_meters, na.rm = TRUE), 2), "meters", "and the average weight is", round(mean(playersData$weight_pounds, na.rm = TRUE), 2), "pounds", sep = " ")
+    paste("The average body height for the", input$positions, "position on the", input$teams,"is", round(mean(playersData$height_inches, na.rm = TRUE), 2), "inches", "and the average weight is", round(mean(playersData$weight_pounds, na.rm = TRUE), 2), "pounds", sep = " ")
+  })
+  
+  #create plot
+  output$mapPlot <- renderPlot({
+    #get data
+    playersData <- getplayersData()
+    
+    mapData <- playersData |>
+      select(birth_country) |>
+      group_by(birth_country) |>
+      mutate(counts = n()) |>
+      distinct() |>
+      filter(!is.na(birth_country))
+    
+    #base plotting object
+    g <- ggplot(mapData) +
+      geom_map(aes(map_id = birth_country, fill = as.factor(counts)), map = world_map) +
+      geom_polygon(data = world_map, aes(x = long, y = lat, group = group), colour = 'black', fill = NA) +
+      expand_limits(x = world_map$long, y = world_map$lat) +
+      scale_fill_brewer(name = "Counts", palette = "Accent") +
+      theme_void() +
+      coord_fixed() + 
+      labs(title = "Home Countries of Players by Position")
+    
+    g
   })
   
 }
