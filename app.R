@@ -142,7 +142,7 @@ nba_teams_list <- paste(nba_teams$id, nba_teams$name, sep = " ") #combining team
 
 #Creating lists of positions and divisions of play for user input
 #These are variables within the data set, and user input will subset the data
-positions <- c("All", "G", "SF", "SG", "PF", "C", "F", "F-C", "F-G", "G-F")
+positions <- c("All", "G", "SF", "SG", "PG", "PF", "C", "F", "F-C", "F-G", "G-F")
 divisions <- c("Overall", "Conference", "Division", "Home", "Away")
 world_map <- map_data(map = "world")
 
@@ -246,10 +246,15 @@ server <- function(input, output, session) {
   output$teamTable <- renderTable({
     #get data
     teamtableData <- getteamData()
-    #write csv
-    write.csv(teamtableData, "teamData.csv")
-    #display data
-    teamtableData
+    
+    if (input$positions == "All") {
+      write.csv(teamtableData, "teamData.csv")
+      teamtableData
+    } else {
+      subset <- teamtableData |> filter(pos == input$positions)
+      write.csv(subset, "subsetteamData.csv")
+      subset
+    }
   })
 
   #creating text info explaining the players data
